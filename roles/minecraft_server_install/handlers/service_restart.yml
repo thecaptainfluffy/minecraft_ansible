@@ -1,0 +1,6 @@
+# roles/minecraft/handlers/service_restart.yml
+---
+- name: Restart Minecraft Server
+  win_service:
+    name: MinecraftServer
+    state: restarted

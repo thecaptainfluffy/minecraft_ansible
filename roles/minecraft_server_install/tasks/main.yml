@@ -1,0 +1,10 @@
+# roles/minecraft/tasks/main.yml
+---
+- name: Ensure Java is installed
+  include_tasks: java.yml
+
+- name: Minecraft server portforwarding
+  include_tasks: port_forwarding.yml
+
+- name: Set up Minecraft server files and configuration
+  include_tasks: server_setup.yml

@@ -1,0 +1,24 @@
+# roles/minecraft/tasks/port_forwarding.yml
+---
+- name: Allow Minecraft Server Port 25565 in Windows Firewall
+  win_firewall_rule:
+    name: "Minecraft Server Port"
+    enable: yes
+    localport: 25565
+    action: allow
+    direction: in
+    protocol: tcp
+    profile: any
+  register: firewall_rule_added
+
+- name: Verify Port 25565 is Open in Firewall
+  win_shell: |
+    netstat -an | findstr :25565
+  register: port_check
+  changed_when: false
+
+- name: Debug Port Check Result
+  debug:
+    var: port_check.stdout
+  when: firewall_rule_added.changed
+

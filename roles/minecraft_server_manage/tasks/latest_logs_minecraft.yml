@@ -1,0 +1,9 @@
+---
+- name: Fetch Minecraft Server Logs
+  hosts: windows
+  tasks:
+    - name: Retrieve Latest Log File
+      win_copy:
+        src: "C:\\Minecraft\\logs\\latest.log"
+        dest: "/home/your_user/minecraft_logs/latest.log"
+

@@ -1,0 +1,8 @@
+---
+eula_value: true
+max_players: 20
+difficulty: "normal"
+gamemode: "survival"
+pvp: true
+minecraft_version_url: "https://launcher.mojang.com/v1/objects/<minecraft_server_version>/server.jar"
+

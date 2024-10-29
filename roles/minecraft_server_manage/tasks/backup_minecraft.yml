@@ -1,0 +1,15 @@
+---
+- name: Backup Minecraft Server World Data
+  hosts: windows
+  tasks:
+    - name: Create Backup Directory
+      win_file:
+        path: "C:\\Minecraft\\backups"
+        state: directory
+
+    - name: Backup World Data
+      win_copy:
+        src: "C:\\Minecraft\\world"
+        dest: "C:\\Minecraft\\backups\\world_backup_{{ ansible_date_time.date }}.zip"
+        remote_src: true
+

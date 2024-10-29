@@ -1,0 +1,17 @@
+# roles/minecraft/tasks/java.yml
+---
+- name: Ensure Chocolatey is installed on Windows
+  win_chocolatey:
+    name: chocolatey
+    state: present
+
+- name: Install Java Runtime Environment (JRE)
+  win_chocolatey:
+    name: jre8
+    state: present
+  register: java_installed
+
+- name: Verify Java Installation
+  win_command: java -version
+  when: java_installed.changed
+

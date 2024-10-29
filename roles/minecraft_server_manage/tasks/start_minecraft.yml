@@ -1,0 +1,11 @@
+# playbooks/start_minecraft.yml
+---
+- name: Start Minecraft Server with Console Open
+  hosts: windows
+  tasks:
+    - name: Open Command Prompt and Start Minecraft Server
+      win_shell: |
+        start cmd.exe /k "cd C:\Minecraft && java -Xmx1024M -Xms1024M -jar server.jar nogui"
+      args:
+        executable: cmd
+

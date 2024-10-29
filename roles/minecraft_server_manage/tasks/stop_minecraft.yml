@@ -1,0 +1,15 @@
+# playbooks/stop_minecraft.yml
+---
+- name: Stop Minecraft Server Java Process
+  hosts: windows
+  tasks:
+    - name: Find the Java Process Running Minecraft
+      win_shell: |
+        Get-Process -Name "java" | Where-Object { $_.CommandLine -match "-jar server.jar" } | Select-Object -ExpandProperty Id
+      register: minecraft_java_pid
+
+    - name: Stop the Minecraft Java Process
+      win_shell: |
+        Stop-Process -Id {{ minecraft_java_pid.stdout }} -Force
+      when: minecraft_java_pid.stdout != ""
+

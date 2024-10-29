@@ -1,0 +1,17 @@
+---
+- name: Setup Minecraft Server on Windows
+  hosts: windows
+  gather_facts: no
+  vars_files:
+    - vars/main.yml
+  tasks:
+    - name: Install Java using Chocolatey
+      win_chocolatey:
+        name: jre8
+        state: present
+
+    - name: Create Minecraft Server Directory
+      win_file:
+        path: "C:\\Minecraft"
+        state: directory
+

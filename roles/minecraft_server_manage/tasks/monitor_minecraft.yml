@@ -1,0 +1,20 @@
+---
+- name: Monitor Minecraft Server Performance
+  hosts: windows
+  tasks:
+    - name: Check CPU Usage
+      win_shell: "Get-WmiObject Win32_Processor | Select-Object LoadPercentage"
+      register: cpu_usage
+    
+    - name: Check Memory Usage
+      win_shell: "Get-WmiObject Win32_OperatingSystem | Select-Object FreePhysicalMemory,TotalVisibleMemorySize"
+      register: memory_usage
+
+    - name: Display CPU Usage
+      debug:
+        var: cpu_usage.stdout
+
+    - name: Display Memory Usage
+      debug:
+        var: memory_usage.stdout
+
