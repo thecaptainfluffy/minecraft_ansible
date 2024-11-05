@@ -1,0 +1,23 @@
+# install_minecraft_server.yml
+- name: Ensure the Minecraft server directory exists
+  win_file:
+    path: '{{ installation_path }}'
+    state: directory
+
+- name: Download the latest Paper Minecraft server jar
+  win_get_url:
+    url: 'https://api.papermc.io/v2/projects/paper/versions/1.21.1/builds/131/downloads/paper-1.21.1-131.jar'
+    dest: '{{ installation_path }}/paper.jar'
+  register: download_result
+
+- name: Create a PowerShell script to start the server
+  win_copy:
+    dest: '{{ installation_path }}/start_server.ps1'
+    content: |
+      Start-Process -NoNewWindow -FilePath 'java' -ArgumentList '-Xmx1G -Xms1G -jar paper.jar --nogui' -WorkingDirectory '{{ installation_path }}'
+
+- name: Run the Minecraft server for the first time to generate initial files
+  win_shell: 'powershell -File {{ installation_path }}/start_server.ps1'
+  args:
+    executable: powershell
+  when: download_result.changed

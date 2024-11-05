@@ -1,10 +1,21 @@
-# roles/minecraft/tasks/main.yml
+# roles/minecraft_server_install/tasks/main.yml
 ---
-- name: Ensure Java is installed
-  include_tasks: java.yml
+- name: Verify Java Installation
+  include_tasks: java_verify.yml
 
-- name: Minecraft server portforwarding
-  include_tasks: port_forwarding.yml
+- name: Install Java if Not Found
+  include_tasks: java_install.yml
+  when: java_version is not defined or java_version < 17
 
-- name: Set up Minecraft server files and configuration
-  include_tasks: server_setup.yml
+    #- name: Verify Paper Installation
+    #include_tasks: paper_verify.yml
+
+- name: Download paper if Not found
+  include_tasks: paper_download.yml
+  when: paper_path is not defined
+
+#- name: Minecraft server portforwarding
+#include_tasks: port_forwarding.yml
+
+#- name: Set up Minecraft server files and configuration
+#include_tasks: server_setup.yml
