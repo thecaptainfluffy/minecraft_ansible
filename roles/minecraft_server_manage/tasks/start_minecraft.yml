@@ -1,11 +1,5 @@
 # playbooks/start_minecraft.yml
 ---
-- name: Start Minecraft Server with Console Open
-  hosts: windows
-  tasks:
-    - name: Open Command Prompt and Start Minecraft Server
-      win_shell: |
-        start cmd.exe /k "cd C:\Minecraft && java -Xmx1024M -Xms1024M -jar server.jar nogui"
-      args:
-        executable: cmd
-
+- name: Start Minecraft server in a new PowerShell window
+  ansible.windows.win_shell: |
+    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-Command", "cd 'C:/Users/simon/Minecraft'; java -Xmx1G -Xms1G -jar paper.jar --nogui"

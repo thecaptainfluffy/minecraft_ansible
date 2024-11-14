@@ -4,34 +4,28 @@
     name: chocolatey
     state: present
 
-- name: Install OpenJDK 17 via Chocolatey
+- name: Install OpenJDK 21 via Chocolatey
   chocolatey.chocolatey.win_chocolatey:
     name: openjdk
-    version: '17.0.0'  # Ensures installation of Java 17
-    state: present
+    version: '21'  # Ensures installation of Java 17
+    state: latest
   register: java_install
 
 - name: Set JAVA_HOME environment variable
   ansible.windows.win_environment:
     name: JAVA_HOME
     state: present
-    value: "C:\\Program Files\\OpenJDK\\openjdk-17"  # Adjust based on Chocolatey's installation path
+    value: "C:\\Program Files\\OpenJDK\\jdk-21"  # Adjust based on Chocolatey's installation path
     level: machine
-
-- name: Add Java to PATH environment variable
-  ansible.windows.win_environment:
-    name: PATH
-    state: present
-    value: "{{ (lookup('env', 'PATH') + ';C:\\Program Files\\OpenJDK\\openjdk-17\\bin') | regex_replace(';;', ';') }}"
-    level: machine
+  register: java_home_var
 
 - name: Verify Java installation
-  ansible.windows.win_shell:
-    cmd: "java -version"
+  ansible.windows.win_shell: "java -version"
+  args:
     executable: powershell
   register: java_version_output
   changed_when: false
 
 - name: Display Java installed version
   debug:
-    msg: "Java installed version: {{ java_version_output.stdout }}"
+    msg: "Java installed version: {{ java_version_output }}"

@@ -1,21 +1,37 @@
 # roles/minecraft_server_install/tasks/main.yml
 ---
+- name: Pre Installation
+  include_tasks: pre_install.yml
+
 - name: Verify Java Installation
   include_tasks: java_verify.yml
 
 - name: Install Java if Not Found
   include_tasks: java_install.yml
-  when: java_version is not defined or java_version < 17
+  when: java_version is not defined or (java_version | int)< 21
 
-    #- name: Verify Paper Installation
-    #include_tasks: paper_verify.yml
+- name: Verify Paper Installation
+  include_tasks: paper_verify.yml
 
-- name: Download paper if Not found
-  include_tasks: paper_download.yml
-  when: paper_path is not defined
+- name: Install paper if Not found
+  include_tasks: paper_install.yml
+  when: paper_jar_status is defined and not paper_jar_status.stat.exists
 
-#- name: Minecraft server portforwarding
-#include_tasks: port_forwarding.yml
+- name: Eula agreement
+  include_tasks: eula_agreement.yml
+
+- name: Ensure ansible.windows collection is installed on the control node
+  ansible.builtin.shell: |
+    if ! ansible-galaxy collection list | grep -q 'ansible.windows'; then
+      ansible-galaxy collection install community.windows;
+    fi
+  delegate_to: localhost
+  run_once: true
+  register: install_result
+  changed_when: install_result.stdout != ""
+
+- name: Minecraft server portforwarding
+  include_tasks: port_forwarding.yml
 
 #- name: Set up Minecraft server files and configuration
 #include_tasks: server_setup.yml

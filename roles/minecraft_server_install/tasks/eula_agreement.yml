@@ -1,0 +1,49 @@
+#paper_setup.yml
+---
+- name: Check if eula.txt contains the eula value
+  win_shell: |
+    $eula_line = Select-String -Path "{{ installation_path }}\eula.txt" -Pattern '^eula='
+    if ($eula_line) {
+      $eula_value = $eula_line.Line -replace '^eula=', ''
+      Write-Output $eula_value.Trim()
+    }
+  register: eula_value_output
+
+- name: Debug eula_value_output value
+  debug:
+    msg: "The current eula value output is: {{ eula_value_output.stdout_lines[0] }}"
+
+- name: Set eula value based on file content
+  ansible.builtin.set_fact:
+    current_eula: "{{ 'true' if eula_value_output.stdout | trim == 'true' else 'false' }}"
+  when: eula_value_output.stdout is defined
+
+- name: Debug current_eula value
+  debug:
+    msg: "The current EULA value is: {{ current_eula }}"
+
+- block:
+  - name: Read agreement text from remote file
+    ansible.builtin.slurp:
+      src: "{{ installation_path }}/eula.txt"
+    register: eula_content
+
+  - name: Show agreement text
+    debug:
+      msg: "{{ eula_content.content | b64decode }}"
+
+  - name: Prompt user for agreement
+    pause:
+      prompt: "Do you agree to the EULA terms above? Type 'true' to agree or 'false' to disagree: "
+    register: user_input
+
+  - name: Set eula variable based on user input
+    set_fact:
+      eula: "{{ user_input.user_input == 'true' }}"
+
+  - name: Update eula value in eula.txt
+    win_lineinfile:
+      path: "{{ installation_path }}/eula.txt"
+      regexp: '^eula='
+      line: "eula={{ eula | ternary('true', 'false') }}"
+  when: not (current_eula | bool)

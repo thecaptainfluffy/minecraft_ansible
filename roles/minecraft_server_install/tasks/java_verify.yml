@@ -1,58 +1,38 @@
 ---
 - name: Check if JAVA_HOME environment variable is set
-  ansible.windows.win_environment:
-    name: JAVA_HOME
+  ansible.windows.win_shell: "[System.Environment]::GetEnvironmentVariable('JAVA_HOME', 'Machine')"
   register: java_home_var
-  failed_when: false  # Avoid failing if JAVA_HOME is not set
+  changed_when: false
 
-- name: Verify if JAVA_HOME points to java.exe
-  ansible.windows.win_stat:
-    path: "{{ java_home_var.value | default('') }}\\bin\\java.exe"
-  register: java_home_stat
-  when: java_home_var.value is defined and java_home_var.value != ''
-  failed_when: false
-
-- name: Search for Java in Program Files
-  ansible.windows.win_find:
-    paths:
-      - 'C:\\Program Files\\Java'
-      - 'C:\\Program Files (x86)\\Java'
-    recurse: yes
-    patterns: 'java.exe'
-  register: java_find
-  when: java_home_stat.exists is not defined or not java_home_stat.exists
-
-- name: Register Java path based on search results
-  set_fact:
-    java_path: >-
-      {{
-        java_home_var.value if (java_home_stat.exists | default(false)) else
-        (java_find.files[0].path if (java_find.matched | default(0)) > 0 else None)
-      }}
-
-- name: Display Java path or prompt for installation
+- name: Debug JAVA_HOME value
   debug:
-    msg: "Java path found: {{ java_path | default('Java not found, please run java_install.yml to install Java.') }}"
+    msg: "JAVA_HOME is set to: {{ java_home_var.stdout | default('Not Set') }}"
 
-# Check if Java version is at least 17
-- name: Get Java version
-  command: "{{ java_path }}\\bin\\java.exe -version"
-  register: java_version_output
-  when: java_path is defined
-  failed_when: false  # Avoid failing if Java is not found
+- block:
+  - name: Set Java path if JAVA_HOME is defined
+    set_fact:
+      java_path: "{{ java_home_var.stdout }}"
 
-- name: Parse Java version
-  set_fact:
-    java_version: "{{ java_version_output.stderr | regex_search('version \"([0-9]+)') | first | int }}"
-  when: java_version_output is defined and java_version_output.stderr is defined
+  - name: Get Java version on Windows
+    raw: java -fullversion
+    register: java_version_output
 
-    #- name: Ensure Java version is at least 17 or prompt installation
-    #include_role:
-    #name: java_install
-    #when: java_version is not defined or java_version < 17
+  - name: Debug Java version
+    debug:
+      msg: "Java version is set to: {{ java_version_output.stderr | default('Not Set') }}"
 
-    #- name: Java version check result
-    #debug:
-    #msg: "Java version {{ java_version }} is installed and meets the minimum requirement."
-    #when: java_version is defined and java_version >= 17
+  - block:
+    - name: Parse Java version
+      set_fact:
+        java_version: "{{ (java_version_output.stderr | regex_search('version \"([0-9]+)', '\\1')) | first }}"
+    
+    - name: Debug Parsed Java version
+      debug:
+        msg: "Parsed Java version is set to: {{ java_version | default('Not Set') }}"
 
+    - name: Java version check result
+      debug:
+        msg: "Java version {{ java_version }} is installed and meets the minimum requirement."
+      when: java_version is defined and (java_version | int) >= 21
+    when: java_version_output.stderr is defined and java_version_output.stderr is defined
+  when: java_home_var.stdout is defined and java_home_var.stdout != ''
