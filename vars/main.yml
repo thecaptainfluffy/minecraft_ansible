@@ -1,4 +1,5 @@
 ---
 minecraft_version: "1.17.1"
 installation_path: "C:/Users/simon/Minecraft"
-
+memory_min: 2
+memory_max: 4

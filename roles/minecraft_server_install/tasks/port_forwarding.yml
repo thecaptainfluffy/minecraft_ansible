@@ -1,45 +1,5 @@
 # roles/minecraft/tasks/port_forwarding.yml
 ---
-# Retrieve network interface details
-- name: Retrieve network interface details
-  ansible.windows.win_shell: |
-    $interface = Get-NetIPConfiguration | Where-Object { $_.IPv4Address -ne $null }
-    $interface | Select-Object -ExpandProperty InterfaceAlias
-  register: interface_name_result
-
-- name: Set interface_name variable
-  set_fact:
-    interface_name: "Ethernet"
-
-# Retrieve current gateway address
-- name: Retrieve current gateway address
-  ansible.windows.win_shell: |
-    (Get-NetIPConfiguration -InterfaceAlias '{{ interface_name }}').IPv4DefaultGateway.NextHop
-  register: gateway_result
-
-- name: Set gateway variable
-  set_fact:
-    gateway: "{{ gateway_result.stdout }}"
-
-# Verify that gateway and dns_server variables are set correctly
-- name: Display retrieved network values for debugging
-  ansible.builtin.debug:
-    msg: "Interface: {{ interface_name }}, Gateway: {{ gateway }}, DNS Server: {{ dns_server }}"
-
-# Configure static IP address on the Windows machine
-- name: Configure static IP address on the Windows machine
-  ansible.windows.win_shell: |
-    New-NetIPAddress -InterfaceAlias '{{ interface_name }}' -IPAddress '{{ ansible_host }}' -PrefixLength 24 -DefaultGateway '{{ gateway }}'
-    Set-DnsClientServerAddress -InterfaceAlias '{{ interface_name }}' -ServerAddresses '{{ dns_server }}'
-  register: static_ip_result
-  ignore_errors: yes
-
-# Ensure the network adapter is using a static IP configuration
-- name: Ensure the network adapter is using a static IP configuration
-  ansible.windows.win_shell: |
-    Get-NetIPAddress -InterfaceAlias '{{ interface_name }}' -AddressFamily IPv4
-  register: ip_config
-
 # Configure Windows Firewall to allow Minecraft traffic on port 25565 (TCP)
 - name: Configure Windows Firewall to allow Minecraft traffic on port 25565 (TCP)
   community.windows.win_firewall_rule:
@@ -49,6 +9,7 @@
     direction: in
     protocol: "TCP"
     enable: yes
+    program: "{{ java_home_var.stdout }}\\bin\\javaw.exe"
 
 # Configure Windows Firewall to allow Minecraft traffic on port 25565 (UDP)
 - name: Configure Windows Firewall to allow Minecraft traffic on port 25565 (UDP)
@@ -59,18 +20,22 @@
     direction: in
     protocol: "UDP"
     enable: yes
+    program: "{{ java_home_var.stdout }}\\bin\\javaw.exe"
 
-# Retrieve external IP address
-- name: Retrieve external IP address
-  ansible.builtin.uri:
-    url: "http://ipinfo.io/ip"
-    return_content: yes
+- name: Retrieve external IP address using OpenDNS
+  ansible.windows.win_shell: |
+    nslookup myip.opendns.com resolver1.opendns.com | Select-String -Pattern "Address: " | Select-Object -Last 1
   register: external_ip_result
+
+# Verify that gateway and dns_server variables are set correctly          
+- name: Display retrieved network values for debugging
+  ansible.builtin.debug:
+    msg: "External ip result: {{ external_ip_result }}"
 
 # Display static IP address and external IP address confirmation
 - name: Display IP address confirmation
   ansible.builtin.debug:
     msg: |
       Minecraft server is configured with the static internal IP address {{ ansible_host }} on port 25565 for local connections.
-      External IP address is {{ external_ip_result.content.strip() }} for external connections.
+      External IP address is {{ external_ip_result.stdout }} for external connections.
 

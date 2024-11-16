@@ -62,3 +62,47 @@ winrm set winrm/config @{MaxTimeoutms="180000"}
 New-NetFirewallRule -Name "WinRM HTTPS" -DisplayName "WinRM HTTPS" -Protocol TCP -LocalPort 5986 -Action Allow
 
 Write-Output "WinRM setup complete. Ready for Ansible communication from WSL over HTTP using NTLM."
+
+# Retrieve the interface alias of the active network adapter
+$interface = Get-NetIPConfiguration | Where-Object { $_.IPv4Address.IPAddress -like "192.168.*" }
+$interface_name = [string]$interface.InterfaceAlias  # Explicitly cast as a string
+
+# Output the interface name
+Write-Output "Interface Name: $interface_name"
+
+# Retrieve the current IP address
+$new_ip_address = $interface.IPv4Address.IPAddress
+
+# Output the current IP address
+Write-Output "Current IP Address: $new_ip_address"
+
+# Retrieve the current gateway address
+$gateway = ($interface.IPv4DefaultGateway).NextHop
+
+# Output the gateway address
+Write-Output "Current Gateway: $gateway"
+
+# Retrieve the current DNS server addresses
+$dns_servers = (Get-DnsClientServerAddress -InterfaceAlias $interface_name).ServerAddresses
+
+# Output the DNS server addresses
+Write-Output "Current DNS Servers: $dns_servers"
+
+# Define other configuration parameters
+$new_subnet_mask_length = 24       # Replace with your desired subnet mask length
+$new_dns_servers = @("8.8.8.8", "8.8.4.4") # Replace with your desired DNS servers
+
+# Disable DHCP for the interface
+Set-NetIPInterface -InterfaceAlias $interface_name -Dhcp Disabled
+
+# Assign the static IP address and default gateway
+New-NetIPAddress -InterfaceAlias $interface_name -IPAddress $new_ip_address -PrefixLength $new_subnet_mask_length -DefaultGateway $gateway
+
+# Configure DNS server addresses
+Set-DnsClientServerAddress -InterfaceAlias $interface_name -ServerAddresses $new_dns_servers
+
+# Output the new configuration for verification
+Write-Output "New IP Configuration:"
+Get-NetIPConfiguration -InterfaceAlias $interface_name
+
+Write-Output "Successfully created a static IP"

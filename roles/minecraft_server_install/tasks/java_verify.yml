@@ -9,10 +9,6 @@
     msg: "JAVA_HOME is set to: {{ java_home_var.stdout | default('Not Set') }}"
 
 - block:
-  - name: Set Java path if JAVA_HOME is defined
-    set_fact:
-      java_path: "{{ java_home_var.stdout }}"
-
   - name: Get Java version on Windows
     raw: java -fullversion
     register: java_version_output
@@ -30,9 +26,5 @@
       debug:
         msg: "Parsed Java version is set to: {{ java_version | default('Not Set') }}"
 
-    - name: Java version check result
-      debug:
-        msg: "Java version {{ java_version }} is installed and meets the minimum requirement."
-      when: java_version is defined and (java_version | int) >= 21
     when: java_version_output.stderr is defined and java_version_output.stderr is defined
   when: java_home_var.stdout is defined and java_home_var.stdout != ''

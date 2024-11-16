@@ -10,12 +10,8 @@
   include_tasks: java_install.yml
   when: java_version is not defined or (java_version | int)< 21
 
-- name: Verify Paper Installation
-  include_tasks: paper_verify.yml
-
 - name: Install paper if Not found
   include_tasks: paper_install.yml
-  when: paper_jar_status is defined and not paper_jar_status.stat.exists
 
 - name: Eula agreement
   include_tasks: eula_agreement.yml

@@ -1,0 +1,59 @@
+# Minecraft server - Ansible
+
+This repository is to build Paper Minecraft Server on Windows machine/server using Ansible playbooks. Primary focus been around having Ansible being run on Windows machine locally by using WSL.
+
+## Guide to setup Ansible 
+
+### Pre-setup
+
+1. Either do the following steps below manually or download the script windows_install_script.ps1 from the github repository. You need to run this script with administrative rights. Be carefully to use this script if you decide to use it and make sure it does what it says below. What it does it the following: 
+- Install Windows Terminal (I prefer this terminal)
+- Enable WSL and Virtual Machine Platform for your Windows machine
+- Install Ubuntu-22.04 environment for the Terminal.
+- Set WSL2 as the default version
+- Install WinRM so Ansible can access the Windows machine
+- Create a self signed certificate and sets up so WinRM only listens to localhost over HTTPS with Basic authentication.
+- Open up port 5986 for WinRM HTTPS communication over local network!!!!!!!!!!!!!!!!! - Need to select program
+- Set your current local IP address to become static ip so it will not change.
+- Set your DNS server that you listen to 8.8.8.8 and 8.8.4.4 (Googles DNS servers)
+
+2. Open up the program Terminal and select the arrow pointing down and select the Ubuntu 22.04.X LTS and wait for it to setup. Insert your username and password and store it safely.
+
+3. Inside of the terminal git clone this project down to where you want the folder to be stored.
+
+4. Either do the following steps below manually or run the script linux_install_script.sh. Be carefully to use this script if you decide to use it and make sure it does what it says below. What it does it the following:
+- Update the Ubuntu packages
+- Add the repository Ansible
+- Install Ansible
+- Install python3 and python3-pip
+- Install pywinrm so you can communicate with Windows machine over WinRM
+
+5. You have succesfully setup the Windows / WSL with Ubuntu and installed the required tools to be able to communicate with Linux and Windows with Ansible.
+
+### Setup
+
+1. Change name of ansible_hosts_template.ini to ansible_hosts.ini
+2. Open up Powershell and type the following:
+    - Get-NetIPConfiguration | Where-Object { $_.IPv4Address.IPAddress -like "192.168.*" }
+3. Copy the IPv4Address value.
+4. Add the IPv4address instead of IP_ADDRESS. Insert your username and passwords inside of the ansible_hosts.ini.
+5. Run the folowing command "ansible-playbook install_minecraft.yml" 
+
+## Future features
+
+- when: debug_enabled | default(false) for all debug messages
+- Backup/Restore
+- Upgrade Minecraft Server Version
+- Multiple ports/world on same server
+- Performance overview
+
+## Bug reports
+
+Create a new issue here: https://github.com/thecaptainfluffy/minecraft_ansible/issues/new
+
+## Inspirations
+
+https://github.com/loncarales/minecraft-server-ansible
+https://github.com/rzfeeser/ansible-role-minecraft
+https://github.com/mkamadeus/minecraft-server
+https://github.com/Kaxxu/ansible-minecraft-server

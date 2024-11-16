@@ -1,0 +1,1 @@
+Start-Process  -NoNewWindow -FilePath 'java' -ArgumentList '-Xmx{{ memory_max }}G -Xms{{ memory_min }}G -jar paper.jar --nogui' -WorkingDirectory '{{ installation_path }}'

@@ -11,11 +11,10 @@
   register: download_result
 
 - name: Create a PowerShell script to start the server
-  win_copy:
+  template:
+    src: start_server.ps1.j2
     dest: '{{ installation_path }}/start_server.ps1'
-    content: |
-      Start-Process  -NoNewWindow -FilePath 'java' -ArgumentList '-Xmx1G -Xms1G -jar paper.jar --nogui' -WorkingDirectory '{{ installation_path }}'
-
+    
 - name: Run the Minecraft server for the first time to generate initial files
   win_shell: 'powershell -File {{ installation_path }}/start_server.ps1'
   args:
